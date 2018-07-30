@@ -1,0 +1,544 @@
+<!--
+    client and visualiser for spatial publish/subscribe system
+-->
+
+<!--
+-->
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { height: 800px; }
+      body { font: 13px Helvetica, Arial; height: 100%; margin: 0px; }
+      form { background: #000; padding: 3px; flex-flow: auto; display:flex;}
+      form button { width: auto; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      form input { border: 5px; border-color: #f00; border-radius: 4px; background-color: #ccc; padding: 10px; width: 90%; margin-right: .5%; margin: 5px 5px 5px 0px; }
+      form input[type="radio"] { padding: 0px; border: 0px; margin: 0px 5px 0px 0px; width: auto;}
+      span{ flex: 1 1 auto; }
+      #forms { position: fixed; bottom: 0; height: auto; display: flex; flex-direction: column; width: 100%; }
+      #coords-form { flex: auto;  }
+      #message { flex-flow: row; }
+      #publish { flex:auto; }
+      #x, #y, #AoI { }
+      #pub-message, #pub-x, #pub-y, #pub-AoI, #pub-channel { }
+      #sub-message, #sub-x, #sub-y, #sub-AoI, #sub-channel { }
+      div { flex-flow: row nowrap; flex-wrap: nowrap; height: 100%; display:flex;}
+      #key { min-height: 150px; position: absolute;  flex-direction: column;  top: 5px; right:5px; height: 15%; border-radius: 5px; background: #9595ea;}
+      #key:active { visibility: hidden; }
+      .key {   font-weight: bold; padding: 5px 5px 5px 5px;}
+      #myCanvas { width: auto; height: auto; justify-content: center; align-items: center;  flex: auto;}
+      #flex-container { display: flex; }
+      #text { flex: 25%; min-width: 300px; flex-direction: column;}
+      #visual { flex: 75%; }
+      #coords { border: 5px; }
+      #select { flex:3%; padding: 5px 5px 5px 5px;  }
+      #radio { min-width: 110px; flex:15%; display:flex; flex-flow: column; background-color: #ccc; border-radius: 4px; margin: 5px 5px 5px 5px; padding: 5px 5px 5px 5px; justify-content: center; }
+      #input { flex: 70%; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #information { list-style-type: none; margin: 0; padding: 0; }
+      #information li { padding: 5px 10px; color: #55e }
+    </style>
+  </head>
+  <body>
+    <div id="flex-container">
+        <div id="text">
+            <ul id="information"></ul>
+            <ul id="messages"></ul>
+        </div>
+        <div id="visual">
+            <div id = "key">
+                <div class="key" style="color:white">Current client</div>
+                <div class="key" style="color:black">Other client</div>
+                <div class="key" style="color:red">Neighbour</div>
+                <div class="key" style="color:#666666">Neighbour that has not subscribed</div>
+                <div class="key" style="color:yellow">Subscriptions</div>
+                <div class="key" style="color:fuchsia">Neighbour subscriptions</div>
+                <div class="key" style="color:blue">Publications</div>
+            </div>
+            <canvas id="myCanvas" width="1440" height="857"></canvas>
+        </div>
+    </div>
+    <div id="forms">
+        <form id="publish" action="">
+            <input id="pub-message" name="Publish" autocomplete="off" placeholder="message"/>
+            <input id="pub-AoI" name="AofI" autocomplete="off" placeholder="Area of interest"/>
+            <input id="pub-x" name="x-coordinate" autocomplete="off" placeholder="x"/>
+            <input id="pub-y" name="y-coordinate" autocomplete="off" placeholder="y"/>
+            <input id="pub-channel" name="channel" placeholder="channel"/>
+            <button id="pub-button">Publish to area/point</button>
+        </form>
+        <form id="coords-form" action = "">
+            <input id="AoI" name="AofI" autocomplete="off" placeholder="Area of interest"/>
+            <input id="x" name="x-coordinate" autocomplete="off" placeholder="x"/>
+            <input id="y" name="y-coordinate" autocomplete="off" placeholder="y"/>
+            <button id="move">Set Coordinates</button>
+        </form>
+        <form id="message" action="">
+            <div id="select">
+                <select id="drop">
+                    <option value="sub" selected="selected">Subscribe</option>
+                    <option value="unsub">Unsubscribe</option>
+                </select>
+            </div>
+            <div id="radio">
+                <label>
+                    <input type="radio" id="clientRadio" name="area" value="client" checked>
+                    <span>Around client</span>
+                </label>
+                <label>
+                    <input type="radio" name="area" value="area">
+                    <span>To an area</span>
+                </label>
+            </div>
+            <div id="input">
+                <input id="sub-AoI" name="AofI" autocomplete="off" placeholder="Area of interest"/>
+                <input id="sub-x" name="x-coordinate" autocomplete="off" placeholder="x"/>
+                <input id="sub-y" name="y-coordinate" autocomplete="off" placeholder="y"/>
+                <input id="sub-channel" name='channel' placeholder="channel"/>
+                <button>Send</button>
+            </div>
+        </form>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      $(function () {
+
+        //create variables
+        var socket = io();
+        var _id = 0;
+        var message = '';
+        var x = 0;
+        var y = 0;
+        var AoI = 0;
+        var timer = 0;
+        var increaser = 0.03
+
+        var sub = function(id,x,y,AoI,channel) {
+            //this.layer = layer;
+            this.x = x;
+            this.y = y;
+            this.AoI = AoI;
+            this.channel = channel;
+
+            this.hash = id+'/'+x+'/'+y;
+
+            this.toString = function(){
+                return x+','+y+','+AoI+','+channel;
+            }
+
+            this.isClientAoI = function(x,y){
+                return (this.x==x && this.y==y);
+            }
+        }
+
+        var pub = function(id,x,y,AoI,channel) {
+            //this.layer = layer;
+            this.x = x;
+            this.y = y;
+            this.AoI = AoI;
+            this.channel = channel;
+
+            this.hash = id+'/'+x+'/'+y;
+
+            this.toString = function(){
+                return x+','+y+','+AoI+','+channel;
+            }
+
+            this.isClientAoI = function(x,y){
+                return (this.x==x && this.y==y);
+            }
+
+            this.drawPub = function(){
+                    if (timer < 0 || timer > 1){
+                        increaser = -increaser;
+                    }
+                    timer += increaser;
+                    draw(x,y,AoI,id, "rgba(0,0,255,"+timer+")");
+                }
+        }
+
+        //data structure to store clients in server
+        var clients = [
+            //0 - client ID
+            //1 - X coordinate
+            //2 - Y coordinate
+            //3 - Area of Interest
+            //4 - Map of subscription areas
+        ];
+
+        //data structure to store neighbours to client
+        var neighbours = [];
+
+        //store publication pulses
+        var publications = new Map();
+
+        //create references to canvas
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext("2d");
+
+        //frame rate
+        setInterval(function(){
+            redraw();
+        },33);
+
+        //Subscribe button
+        $('#message').submit(function(){
+            var drop = document.getElementById('drop');
+            var radio = document.getElementById('clientRadio')
+            message = _id + ";" + drop.options[drop.selectedIndex].value+";"+radio.checked+';'+$("#sub-AoI").val()+';'
+                    +$("#sub-x").val()+';'+$("#sub-y").val()+';'+$('#sub-channel').val();
+
+            //emit a subscription event on the socket
+            socket.emit('function', message);
+
+            //clear the input
+            $('#sub-AoI').val('');
+            $('#sub-x').val('');
+            $('#sub-y').val('');
+            message = '';
+
+            return false;
+        });
+
+        //Move function
+        $('#coords-form').submit(function() {
+            message = _id+';'+$('#x').val()+';'+$('#y').val()+';'+$('#AoI').val();
+
+            //emit a move event on the socket
+            socket.emit('move', message);
+
+            //clear the input
+            $('#x').val('');
+            $('#y').val('');
+            $('#AoI').val('');
+            $('#move').html('Move');
+
+            return false;
+        });
+
+        //publish function
+        $('#publish').submit(function() {
+            message = _id+';'+$('#pub-x').val()+';'+$('#pub-y').val()+';'+$('#pub-AoI').val()+';'+$('#pub-message').val()+';'+$('#pub-channel').val().toLowerCase();
+
+            socket.emit('publish', message);
+
+            $('#pub-message').val('');
+            $('#pub-x').val('');
+            $('#pub-y').val('');
+            $('#pub-AoI').val('');
+
+            return false;
+        });
+
+        //receive clients and ID
+        socket.on('clients', function(clientList) {
+            var _clientList = clientList.split(" ");
+
+            //set local variables
+            _id = _clientList[0];
+            x = parseInt(_clientList[1]);
+            y = parseInt(_clientList[2]);
+            AoI = parseInt(_clientList[3]);
+
+            var array = [
+                _id,            //client ID
+                x,              //x coordinate
+                y,              //y coordinate
+                AoI,            //AoI
+                new Map()       //subscriptions
+            ];
+            clients[_id] = array;
+
+
+            //populate client list
+            //NOTE: start at 4 because 0-3 are client ID and coordinates
+            for (var i = 4; i < _clientList.length; i++) {
+                var data = _clientList[i].split(",");
+                array = [
+                    data[3],            //client ID
+                    data[0],            //x coordinate
+                    data[1],            //y coordinate
+                    data[2],            //AoI
+                    new Map()           //subscriptions
+                ];
+
+                for (var j = 4; (j+3)<data.length; j+=4){
+                    var pack = new sub(data[3],data[j],data[j+1],data[j+2], data[j+3]);
+
+                    array[4].set(pack.hash,pack);
+                }
+
+                clients[data[3]] = array;
+            };
+
+            $('#information').append($('<li>').text('Your ID is:'+_clientList[0]));
+        });
+
+        //receive joining client info and draw
+        socket.on('client joined', function(info){
+            var data = info.split(" ");
+
+            //check whether client data exists
+            if (_id != data[0]){
+                var array = [
+                    data[0],            //client ID
+                    data[1],            //x coordinate
+                    data[2],            //y coordinate
+                    data[3],            //AoI
+                    new Map()           //Map of subscriptions
+                ];
+
+                clients[data[0]] = array;
+            };
+
+            return false;
+        });
+
+        //receive message
+        socket.on('publish', function(msg){
+            var temp = msg.split(';');
+            msg = 'Client ' + temp[0]+' said: ' + temp[1]+' from ('+temp[2]+','+temp[3]+') in an AoI of '+temp[4]+' on channel '+temp[5];
+            $('#messages').append($('<li>').text(msg));
+
+            return false;
+        });
+
+        //visualise publications
+        socket.on('publication', function(msg){
+            var temp = msg.split(';');
+
+            var pack = new pub(temp[0],temp[2],temp[3],temp[4], temp[5]);
+
+            publications.set(
+                pack.hash,
+                pack
+            );
+
+            return false;
+        });
+
+        //receive coordinate change confirmation
+        socket.on('move', function(info) {
+            var data = info.split(" ");
+            var oldData = clients[data[0]];
+            var AreaofI = 0;
+
+            //check to see if the client has subscribed to the area around it
+            console.log(oldData);
+            console.log(oldData[4].has(oldData[0]+'/'+oldData[1]+'/'+oldData[2]));
+            console.log(oldData[0]+'/'+oldData[1]+'/'+oldData[2]);
+            if (oldData[4].has(oldData[0]+'/'+oldData[1]+'/'+oldData[2])){
+                var pack = new sub(data[0],data[1],data[2],data[3], data[4]);
+                clients[data[0]][4].delete(oldData[0]+'/'+oldData[1]+'/'+oldData[2]);
+                clients[data[0]][4].set(pack.hash,pack);
+                AreaofI = data[3];
+            }
+            console.log("AOI: "+AreaofI);
+            //update reference in client list
+            var array = [
+                data[0],                 //client ID
+                data[1],                 //x coordinate
+                data[2],                 //y coordinate
+                AreaofI,                 //AoI
+                clients[data[0]][4]      //Map of subscribers
+            ]
+
+            clients[data[0]] = array;
+
+            //send notification that client has successfully moved and update local variables
+            if (_id == data[0]){
+                x = data[1];
+                y = data[2];
+                AoI = AreaofI;
+                $('#information').append($('<li>').text("You have moved to <"+data[1]+','+data[2]+'> with an AoI of '+AreaofI));
+            }
+
+            return false;
+        });
+
+        //Return message if subscribed
+        socket.on('subscribe', function(msg){
+            var temp = msg.split(',');
+            var pack = new sub(temp[0],temp[1],temp[2],temp[3], temp[4]);
+            console.log(pack);
+
+            clients[temp[0]][4].set(pack.hash,pack);
+            console.log(clients[temp[0]][4]);
+
+            //update client AoI in client list if the subscription is in the are around it
+            if (pack.isClientAoI(clients[temp[0]][1],clients[temp[0]][2])){
+                clients[temp[0]][3] = temp[3];
+            }
+
+            if (_id == temp[0]){
+                if (pack.isClientAoI(x,y)) {
+                    AoI = temp[3];
+                }
+                $('#information').append($('<li>').text('You are now subscribed to receive messages in the area '+temp[3]+' units around <'+temp[1]+','+temp[2]+'> on the channel '+temp[4]));
+            }
+
+            return false;
+        });
+
+        //send unsubscribe message
+        socket.on('unsubscribe', function(msg){
+            var data = msg.split(';');
+
+            clients[data[0]][4].delete(data[1]);
+
+            if (data[0] == _id){
+                if (data[2]==x && data[3]==y){
+                    AoI = 0;
+                }
+                $('#information').append($('<li>').text('You unsubscribed from the area ('+data[2]+','+data[3]+') on channel '+data[4]));
+            } else {
+                $('#information').append($('<li>').text('Client '+data[0]+' unsubscribed from the area ('+data[2]+','+data[3]+') on channel '+data[4]));
+            }
+
+            return false;
+        });
+
+        //If message was sent but not subscribed
+        socket.on('not subscribed', function(msg){
+            $('#information').append($('<li>').text(msg));
+
+            return false;
+        });
+
+        //return message if function is unknown
+        socket.on('unknown', function(msg){
+            $('#information').append($('<li>').text(msg));
+
+            return false;
+        });
+
+        socket.on('disconnect', function(id){
+            delete clients[id];
+            $('#information').append($('<li>').text("Client "+id+" disconnected"));
+
+            return false;
+        });
+
+        //draw client function
+        var draw = function(x,y,AoI,ID, color="black"){
+            ctx.font = "30px Arial";
+
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.arc((canvas.width/2)+parseInt(x), (canvas.height/2)+parseInt(y), 5, 0, 2*Math.PI);
+            ctx.fillText(ID,(canvas.width/2)+parseInt(x) + 15 ,(canvas.height/2)+parseInt(y)+15);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc((canvas.width/2)+parseInt(x), (canvas.height/2)+parseInt(y), AoI, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+
+        //redraw canvas
+        var redraw = function(){
+            //clearn the canvas
+            ctx.fillStyle = 'green';
+            ctx.fillRect(0,0, canvas.width,canvas.height);
+            ctx.fill();
+
+            //draw client
+            draw(x,y,AoI,_id,"white");
+
+            //draw client subscriptions
+            var map = clients[_id][4];
+            for (var sub of map.keys()){
+                var pack = map.get(sub);
+                //check to see if it is the area around the client
+                if (pack.isClientAoI(x,y)) {
+                    continue;
+                }
+
+                draw(pack.x,pack.y,pack.AoI,_id,"yellow");
+            }
+
+            //draw other clients
+            for (var key in clients){
+                //skip self
+                if (key == _id) {
+                    continue;
+                }
+                //                 x               y                 AoIs        ID
+                if (isNeighbour(clients[key][1],clients[key][2],clients[key][3], key, "#666666")){
+
+                    var array = [
+                        clients[key][1],                //x coordinate
+                        clients[key][2],                //y coordinate
+                        clients[key][3],                //AoI
+                        key                             //client ID
+                    ];
+
+                    neighbours[key] = array;
+                }
+
+                //check every client sub for intersection with this client's subs
+                map = clients[key][4];
+                for (var sub of map.keys()){
+                    pack = map.get(sub);
+
+                    if (pack.isClientAoI(clients[key][1],clients[key][2])) {
+                        console.log("Client ID: "+_id+" Client AoI: "+clients[_id][3]);
+                        if (clients[_id][3] != 0) {
+                            var colour = "red";
+                        } else {
+                            var colour = "#666666";
+                        }
+                        isNeighbour(pack.x,pack.y,pack.AoI,key, colour);
+                        continue;
+                    }
+
+                    isNeighbour(pack.x,pack.y,pack.AoI,key,"fuchsia","yellow");
+                }
+            }
+
+            //draw Publications
+            for (var key of publications.keys()){
+                var pack = publications.get(key);
+                pack.drawPub();
+            }
+        }
+
+        //neighbour discovery function
+        var isNeighbour = function(tX,tY,tAoI,tID, colour = "red", notColour = "black"){
+            var neighbour = false;
+            var map = clients[_id][4];
+
+            //check for neighbour intersection for every subscription
+            for (var sub of map.keys()){
+                var pack = map.get(sub);
+
+                //calculate distance between client and another client
+                var dx = Math.pow(pack.x-tX,2);
+                var dy = Math.pow(pack.y-tY,2);
+                var radius = Math.sqrt(dx+dy);
+                var test = parseInt(pack.AoI) + parseInt(tAoI);
+
+                //if within range, add to neighbour list and draw in red
+                if (radius <= test){
+                    neighbour = true;
+                }
+            }
+
+            if (neighbour) {
+                draw(tX,tY,tAoI,tID, colour);
+            } else {
+                draw(tX,tY,tAoI,tID, notColour);
+            }
+
+            return neighbour;
+        }
+      });
+    </script>
+  </body>
+</html>
