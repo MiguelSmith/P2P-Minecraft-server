@@ -77,6 +77,8 @@ public class ProxySession {
 			{
 				Gson gson = new Gson();
 				try {
+					ConsoleIO.println("Data object");
+					ConsoleIO.println(data[0].toString());
 					PacketHeader headerIn = gson.fromJson((String) data[0], PacketHeader.class);
 					
 					//create incoming packet
@@ -94,6 +96,13 @@ public class ProxySession {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					
+					//determine packet type
+					if (packetIn instanceof LoginStartPacket) {
+						username = ((LoginStartPacket) packetIn).getUsername();
+						String sub = serverID + ";sub;true;80;0;0;"+username;
+						socket.emit("function", sub);
+					} 
 
 					ConsoleIO.println("Send packet to server");
 					server.send(packetIn);

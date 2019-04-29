@@ -38,13 +38,6 @@ public class ServerPacketForwarder extends SessionAdapter {
 		
 		//protocol.setSubProtocol(event.getSession().getPacketProtocol(), true);
 		
-		//determine packet type
-		if (packet instanceof LoginStartPacket) {
-			this.username = ((LoginStartPacket) packet).getUsername();
-			sub = serverID + ";sub;true;80;0;0;"+username;
-			socket.emit("function", sub);
-		} 
-		
 		byte[] buf = new byte[50];
 		buffer = ByteBuffer.wrap(buf);
 		//buffer.position(2);

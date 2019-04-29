@@ -1,0 +1,7 @@
+target/
+# Ignore Herobrine log files
+*.log
+# Ignore Eclipse project files
+.project
+.classpath
+.settings/

@@ -159,7 +159,8 @@ public class ClientPacketForwarder extends SessionAdapter {
 		Gson gson = new Gson();
 		String json = gson.toJson(header);
 		
-		//send JSON		
+		//send JSON
+		ConsoleIO.println(packet.toString());
 		socket.emit("packet received", "client", username, json, packet.toString());
 		ConsoleIO.println("Packet sent to SPS");
 	}
@@ -176,6 +177,7 @@ public class ClientPacketForwarder extends SessionAdapter {
 	private void writeByte(int length) {
         this.buffer.put((byte) length);
 	}
+	
 	private void sendPacket(Packet packet) {
 		session.send(packet);
 	}

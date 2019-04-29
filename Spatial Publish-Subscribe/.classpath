@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="HerobrineClientProxy/src/main/java"/>
+	<classpathentry kind="src" path="HerobrineServerProxy/src/main/java"/>
+	<classpathentry kind="lib" path="HerobrineClientProxy/bin/target/HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineClientProxy/bin/target/original-HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineClientProxy/target/HerobrineProxy-1.0-SNAPSHOT-shaded.jar"/>
+	<classpathentry kind="lib" path="HerobrineClientProxy/target/HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineClientProxy/target/original-HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineServerProxy/bin/target/HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineServerProxy/bin/target/original-HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineServerProxy/target/HerobrineProxy-1.0-SNAPSHOT-shaded.jar"/>
+	<classpathentry kind="lib" path="HerobrineServerProxy/target/HerobrineProxy.jar"/>
+	<classpathentry kind="lib" path="HerobrineServerProxy/target/original-HerobrineProxy.jar"/>
+	<classpathentry kind="output" path="HerobrineClientProxy/target/classes"/>
+</classpath>

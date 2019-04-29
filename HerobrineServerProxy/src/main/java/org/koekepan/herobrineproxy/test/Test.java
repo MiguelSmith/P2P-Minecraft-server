@@ -14,7 +14,7 @@ public class Test {
 		String spsHost = "127.0.0.1";
 		int spsPort = 3000;
 		String serverHost= "127.0.0.1";
-		int serverPort = 25575;
+		int serverPort = 25565;
 
 		// read command line parameters
 		try {

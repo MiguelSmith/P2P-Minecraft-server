@@ -103,20 +103,19 @@
             </div>
         </form>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       $(function () {
-
         //create variables
-        var socket = io();
+        var socket = io("http://localhost:3000");
         var _id = 0;
         var message = '';
         var x = 0;
         var y = 0;
         var AoI = 0;
         var timer = 0;
-        var increaser = 0.03
+        var increaser = 0.03;
 
         var sub = function(id,x,y,AoI,channel) {
             //this.layer = layer;
@@ -175,7 +174,7 @@
         var neighbours = [];
 
         //store publication pulses
-        var publications = new Map();
+        var publications = {};
 
         //create references to canvas
         var canvas = document.getElementById('myCanvas');
@@ -235,6 +234,12 @@
             return false;
         });
 
+        socket.on('type', function(serverID, clientID) {
+            console.log("Received ID " + clientID);
+            _id = clientID;
+            socket.emit("client connected", _id);
+        })
+
         //receive clients and ID
         socket.on('clients', function(clientList) {
             var _clientList = clientList.split(" ");
@@ -246,11 +251,11 @@
             AoI = parseInt(_clientList[3]);
 
             var array = [
-                _id,            //client ID
-                x,              //x coordinate
-                y,              //y coordinate
-                AoI,            //AoI
-                new Map()       //subscriptions
+                _id,            // 0 - client ID
+                x,              // 1 - x coordinate
+                y,              // 2 - y coordinate
+                AoI,            // 3 - AoI
+                {}       // 4 - subscriptions
             ];
             clients[_id] = array;
 
@@ -264,13 +269,13 @@
                     data[0],            //x coordinate
                     data[1],            //y coordinate
                     data[2],            //AoI
-                    new Map()           //subscriptions
+                    {}                  //subscriptions
                 ];
 
                 for (var j = 4; (j+3)<data.length; j+=4){
                     var pack = new sub(data[3],data[j],data[j+1],data[j+2], data[j+3]);
 
-                    array[4].set(pack.hash,pack);
+                    array[4][pack.hash] = pack;
                 }
 
                 clients[data[3]] = array;
@@ -290,7 +295,7 @@
                     data[1],            //x coordinate
                     data[2],            //y coordinate
                     data[3],            //AoI
-                    new Map()           //Map of subscriptions
+                    {}           //Map of subscriptions
                 ];
 
                 clients[data[0]] = array;
@@ -314,10 +319,7 @@
 
             var pack = new pub(temp[0],temp[2],temp[3],temp[4], temp[5]);
 
-            publications.set(
-                pack.hash,
-                pack
-            );
+            publications[pack.hash] = pack;
 
             return false;
         });
@@ -326,25 +328,25 @@
         socket.on('move', function(info) {
             var data = info.split(" ");
             var oldData = clients[data[0]];
-            var AreaofI = 0;
+            var areaOfInt = 0;
 
             //check to see if the client has subscribed to the area around it
             console.log(oldData);
-            console.log(oldData[4].has(oldData[0]+'/'+oldData[1]+'/'+oldData[2]));
+            console.log(oldData[4].hasOwnProperty(oldData[0]+'/'+oldData[1]+'/'+oldData[2]));
             console.log(oldData[0]+'/'+oldData[1]+'/'+oldData[2]);
             if (oldData[4].has(oldData[0]+'/'+oldData[1]+'/'+oldData[2])){
                 var pack = new sub(data[0],data[1],data[2],data[3], data[4]);
-                clients[data[0]][4].delete(oldData[0]+'/'+oldData[1]+'/'+oldData[2]);
-                clients[data[0]][4].set(pack.hash,pack);
-                AreaofI = data[3];
+                delete clients[data[0]][4][oldData[0]+'/'+oldData[1]+'/'+oldData[2]];
+                clients[data[0]][4][pack.hash] = pack;
+                areaOfInt = data[3];
             }
-            console.log("AOI: "+AreaofI);
+            console.log("AOI: "+areaOfInt);
             //update reference in client list
             var array = [
                 data[0],                 //client ID
                 data[1],                 //x coordinate
                 data[2],                 //y coordinate
-                AreaofI,                 //AoI
+                areaOfInt,                 //AoI
                 clients[data[0]][4]      //Map of subscribers
             ]
 
@@ -354,8 +356,8 @@
             if (_id == data[0]){
                 x = data[1];
                 y = data[2];
-                AoI = AreaofI;
-                $('#information').append($('<li>').text("You have moved to <"+data[1]+','+data[2]+'> with an AoI of '+AreaofI));
+                AoI = areaOfInt;
+                $('#information').append($('<li>').text("You have moved to <"+data[1]+','+data[2]+'> with an AoI of '+areaOfInt));
             }
 
             return false;
@@ -367,7 +369,7 @@
             var pack = new sub(temp[0],temp[1],temp[2],temp[3], temp[4]);
             console.log(pack);
 
-            clients[temp[0]][4].set(pack.hash,pack);
+            clients[temp[0]][4][pack.hash] = pack;
             console.log(clients[temp[0]][4]);
 
             //update client AoI in client list if the subscription is in the are around it
@@ -389,7 +391,7 @@
         socket.on('unsubscribe', function(msg){
             var data = msg.split(';');
 
-            clients[data[0]][4].delete(data[1]);
+            delete clients[data[0]][4][data[1]];
 
             if (data[0] == _id){
                 if (data[2]==x && data[3]==y){
@@ -453,8 +455,8 @@
 
             //draw client subscriptions
             var map = clients[_id][4];
-            for (var sub of map.keys()){
-                var pack = map.get(sub);
+            for (var sub in map){
+                var pack = map[sub];
                 //check to see if it is the area around the client
                 if (pack.isClientAoI(x,y)) {
                     continue;
@@ -484,11 +486,10 @@
 
                 //check every client sub for intersection with this client's subs
                 map = clients[key][4];
-                for (var sub of map.keys()){
-                    pack = map.get(sub);
+                for (var sub in map){
+                    pack = map[sub];
 
                     if (pack.isClientAoI(clients[key][1],clients[key][2])) {
-                        console.log("Client ID: "+_id+" Client AoI: "+clients[_id][3]);
                         if (clients[_id][3] != 0) {
                             var colour = "red";
                         } else {
@@ -503,8 +504,8 @@
             }
 
             //draw Publications
-            for (var key of publications.keys()){
-                var pack = publications.get(key);
+            for (var key in publications){
+                var pack = publications[key];
                 pack.drawPub();
             }
         }
@@ -515,8 +516,8 @@
             var map = clients[_id][4];
 
             //check for neighbour intersection for every subscription
-            for (var sub of map.keys()){
-                var pack = map.get(sub);
+            for (var sub in map){
+                var pack = map[sub];
 
                 //calculate distance between client and another client
                 var dx = Math.pow(pack.x-tX,2);
