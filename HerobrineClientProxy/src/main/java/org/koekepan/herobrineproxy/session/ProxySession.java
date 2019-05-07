@@ -48,13 +48,13 @@ public class ProxySession {
 		this.host = host;
 		this.port = port;
 		
-		server = new Client(host, port, new HerobrineProxyProtocol(), new TcpSessionFactory(null)).getSession();
+		//server = new Client(host, port, new HerobrineProxyProtocol(), new TcpSessionFactory(null)).getSession();
 
-		serverForwarder = new ServerPacketForwarder(client);
-		server.addListener(serverForwarder);
-		server.connect(true);
+		//serverForwarder = new ServerPacketForwarder(client);
+		//server.addListener(serverForwarder);
+		//server.connect(true);
 
-		clientForwarder = new ClientPacketForwarder(session,host,port);
+		clientForwarder = new PacketForwarder(session,host,port);
 		client.addListener(clientForwarder);
 	}
 

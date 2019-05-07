@@ -5,7 +5,6 @@ org\koekepan\herobrineproxy\session\ProxySession$3.class
 org\koekepan\herobrineproxy\HerobrineProxy.class
 org\koekepan\herobrineproxy\ConsoleIO.class
 org\koekepan\herobrineproxy\HerobrineProxyProtocol$3.class
-org\koekepan\herobrineproxy\session\ServerPacketForwarder.class
 org\koekepan\herobrineproxy\HerobrineProxyProtocol.class
 org\koekepan\herobrineproxy\HerobrineProxyProtocol$1.class
 org\koekepan\herobrineproxy\HerobrineProxyProtocol$2.class

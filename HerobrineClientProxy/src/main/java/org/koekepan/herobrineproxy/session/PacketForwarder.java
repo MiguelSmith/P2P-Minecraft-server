@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.data.SubProtocol;
 import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientSettingsPacket;
 import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket;
 import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.Session;
@@ -30,7 +32,7 @@ import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import okhttp3.Handshake;
 
-public class ClientPacketForwarder extends SessionAdapter {
+public class PacketForwarder extends SessionAdapter {
 	private final  Session session;
 	private Socket socket;
 	private String host;
@@ -41,7 +43,7 @@ public class ClientPacketForwarder extends SessionAdapter {
 	private HerobrineProxyProtocol protocol;
 	private ByteBuffer buffer;
 	
-	public ClientPacketForwarder(Session session, String host, int port) 
+	public PacketForwarder(Session session, String host, int port) 
 	{	
 		this.session = session;
 		this.host = host;
@@ -68,7 +70,7 @@ public class ClientPacketForwarder extends SessionAdapter {
 			
 			@Override
 			public void call(Object... args) {
-				ConsoleIO.println("The packet was received by the SPS");
+				//ConsoleIO.println("The packet was received by the SPS");
 			}
 		}).on("test packet received", new Emitter.Listener() {
 			
@@ -92,14 +94,14 @@ public class ClientPacketForwarder extends SessionAdapter {
 			
 			@Override
 			public void call(Object... data) {
-				ConsoleIO.println("Packet has been sent to server");
+				//ConsoleIO.println("Packet has been sent to server");
 			}
 		}).on("publish", new Emitter.Listener() {
 			
 			@Override
 			public void call(Object... data) {
 				Packet packet = decodePacketHeader((String) data[0]);
-				ConsoleIO.println("Packet received from SPS: "+packet);
+				//ConsoleIO.println("Packet received from SPS: "+packet);
 				sendPacket(packet);
 			}
 		});	
@@ -113,7 +115,7 @@ public class ClientPacketForwarder extends SessionAdapter {
 		
 		//Receive packet
 		Packet packet = event.getPacket();
-		ConsoleIO.println("Packet: "+packet);
+		//ConsoleIO.println("Packet: "+packet);
 		
 		//protocol.setSubProtocol(event.getSession().getPacketProtocol(), true);
 		
@@ -126,9 +128,9 @@ public class ClientPacketForwarder extends SessionAdapter {
 		if (packet instanceof LoginStartPacket) {
 			this.username = ((LoginStartPacket) packet).getUsername();
 			sub = clientID + ";sub;true;80;0;0;"+username;
-		} 		
+		} 	
 
-		byte[] buf = new byte[50];
+		byte[] buf = new byte[5000];
 		buffer = ByteBuffer.wrap(buf);
 		//buffer.position(2);
 		ByteBufferNetOutput out = new ByteBufferNetOutput(buffer);
@@ -160,9 +162,9 @@ public class ClientPacketForwarder extends SessionAdapter {
 		String json = gson.toJson(header);
 		
 		//send JSON
-		ConsoleIO.println(packet.toString());
+		//ConsoleIO.println(packet.toString());
 		socket.emit("packet received", "client", username, json, packet.toString());
-		ConsoleIO.println("Packet sent to SPS");
+		//ConsoleIO.println("Packet sent to SPS");
 	}
 	
 	private void writeLength(int length) {

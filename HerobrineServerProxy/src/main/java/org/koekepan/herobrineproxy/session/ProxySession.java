@@ -35,7 +35,7 @@ public class ProxySession {
 	private int serverID = 0;
 
 	private SessionListener clientForwarder = null;
-	private SessionListener serverForwarder = null;
+	private SessionListener spsForwarder = null;
 
 	private String username = null;
 
@@ -77,12 +77,12 @@ public class ProxySession {
 			{
 				Gson gson = new Gson();
 				try {
-					ConsoleIO.println("Data object");
-					ConsoleIO.println(data[0].toString());
+					//ConsoleIO.println("Data object");
+					//ConsoleIO.println(data[0].toString());
 					PacketHeader headerIn = gson.fromJson((String) data[0], PacketHeader.class);
 					
 					//create incoming packet
-					Packet packetIn = protocol.createIncomingPacket(headerIn.getPacket_ID());
+					Packet packetIn = protocol.createIncomingPacket(headerIn.getPacketID());
 					
 					//populating the input buffer
 					byte[] buff = headerIn.getPayload();
@@ -92,7 +92,7 @@ public class ProxySession {
 					try {
 						//create packet
 						packetIn.read(in);
-						ConsoleIO.println("PacketIn after read: "+packetIn.toString());
+						//ConsoleIO.println("PacketIn after read: "+packetIn.toString());
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -104,7 +104,7 @@ public class ProxySession {
 						socket.emit("function", sub);
 					} 
 
-					ConsoleIO.println("Send packet to server");
+					//ConsoleIO.println("Send packet to server");
 					server.send(packetIn);
 					
 				} catch (Throwable e) {
@@ -116,13 +116,13 @@ public class ProxySession {
 			@Override
 			public void call(Object... data) 
 			{				
-				ConsoleIO.println("Packet was received by the SPS ");
+				//ConsoleIO.println("Packet was received by the SPS ");
 			}
 		}).on("publish acknowledge", new Emitter.Listener() {
 			
 			@Override
 			public void call(Object... data) {
-				ConsoleIO.println("Packet has been sent to client"+data[0]);
+				//ConsoleIO.println("Packet has been sent to client"+data[0]);
 			}
 		});
 		
@@ -130,11 +130,10 @@ public class ProxySession {
 		
 		server = new Client(serverHost, serverPort, new HerobrineProxyProtocol(), new TcpSessionFactory(null)).getSession();
 
-		serverForwarder = new ServerPacketForwarder(socket, protocol);
-		server.addListener(serverForwarder);
+		spsForwarder = new SpsPacketForwarder(socket, protocol);
+		server.addListener(spsForwarder);
 
 		server.connect(true);
-		server.isConnected();
 	}
 	
 	public void setID(int serverID) {
@@ -179,11 +178,11 @@ public class ProxySession {
 	}
 
 	public SessionListener getServerPacketForwarder() {
-		return serverForwarder;
+		return spsForwarder;
 	}
 
 	public void setServerPacketForwarder(SessionListener forwarder) {
-		serverForwarder = forwarder;
+		spsForwarder = forwarder;
 	}
 
 

@@ -131,7 +131,7 @@ io.on('connection', function(socket)
             var test = parseInt(temp[3]) + parseInt(pack.AoI);
 
             //check whether AoIs intersect
-            if (radius <= test && pack.channel == channel)
+            if (radius <= test /*&& pack.channel == channel*/)
             {
                 if (packet == undefined)
                 {
@@ -149,7 +149,7 @@ io.on('connection', function(socket)
             }
         };
 
-        io.emit('publication', msg);
+        //io.emit('publication', msg);
 
         return false;
     });
@@ -166,7 +166,7 @@ io.on('connection', function(socket)
     {
         packets.push(packet);
         packStrings.push(packetType);
-        console.log(packetType+" pushed");
+        //console.log(packetType+" pushed");
         socket.emit("packet received", packet);
 
         publishPackets(channel, sender, socket);
@@ -279,7 +279,8 @@ io.on('connection', function(socket)
             temp = ref+" "+temp[1]+' '+temp[2]+" "+temp[3];
         }
 
-        io.emit('move', temp);
+        // TODO: Publish move to those who need to know
+        //io.emit('move', temp);
 
         return false;
     });
@@ -289,7 +290,7 @@ io.on('connection', function(socket)
 
 var publishPackets = function(channel,sender,socket)
 {
-    console.log("Sender " + sender + " sending packet on channel " + channel);
+    //console.log("Sender " + sender + " sending packet on channel " + channel);
 
     if (channel == null && sender == "server")
     {
@@ -304,24 +305,24 @@ var publishPackets = function(channel,sender,socket)
 
 
         //check whether AoIs intersect
-        if (pack.channel == channel)
-        {
+        //if (pack.channel == channel)
+        //{
             while (packets.length != 0){
                 var packet = packets.shift();
                 var packType = packStrings.shift();
                 if (sender == "server")
                 {
-                    console.log("publishing packet to client proxy: "+packType);
-                    server_list[pack.id].socket.emit('publish acknowledge', packet);
+                    //console.log("publishing packet to client proxy: "+packType);
+                    //server_list[pack.id].socket.emit('publish acknowledge', packet);
                     client_list[pack.id].socket.emit('publish', packet);
                 } else
                 {
-                    console.log("publishing packet to server proxy: "+packType);
-                    client_list[pack.id].socket.emit('publish acknowledge', packet);
+                    //console.log("publishing packet to server proxy: "+packType);
+                    //client_list[pack.id].socket.emit('publish acknowledge', packet);
                     server_list[pack.id].socket.emit('publish', packet);
                 }
             }
-        }
+        //}
     };
 };
 

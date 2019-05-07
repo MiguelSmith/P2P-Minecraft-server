@@ -62,7 +62,7 @@ public class ClientMigrationForwarder extends SessionAdapter {
 			session.send(event.getPacket());
 						
 			// add packet forwarder
-			ClientPacketForwarder forwarder = new ClientPacketForwarder(session, host, port);
+			PacketForwarder forwarder = new PacketForwarder(session, host, port);
 			proxySession.setClientPacketForwarder(forwarder);
 			proxySession.getClient().addListener(forwarder);
 			

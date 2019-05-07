@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 
 import io.socket.client.Socket;
 
-public class ServerPacketForwarder extends SessionAdapter {
+public class SpsPacketForwarder extends SessionAdapter {
 	private Socket socket = null;
 	private HerobrineProxyProtocol protocol;
 	private ByteBuffer buffer;
@@ -23,7 +23,7 @@ public class ServerPacketForwarder extends SessionAdapter {
 	private String username;
 	private String sub;
 	
-	public ServerPacketForwarder(Socket socket, HerobrineProxyProtocol protocol) 
+	public SpsPacketForwarder(Socket socket, HerobrineProxyProtocol protocol) 
 	{
 		this.socket = socket;	
 		this.protocol = protocol;
@@ -34,11 +34,11 @@ public class ServerPacketForwarder extends SessionAdapter {
 	{
 		//Receive packet
 		Packet packet = event.getPacket();
-		ConsoleIO.println("Packet: "+event.getPacket());
+		//ConsoleIO.println("Packet: "+event.getPacket());
 		
 		//protocol.setSubProtocol(event.getSession().getPacketProtocol(), true);
 		
-		byte[] buf = new byte[50];
+		byte[] buf = new byte[55000];
 		buffer = ByteBuffer.wrap(buf);
 		//buffer.position(2);
 		ByteBufferNetOutput out = new ByteBufferNetOutput(buffer);
@@ -70,7 +70,7 @@ public class ServerPacketForwarder extends SessionAdapter {
 		String json = gson.toJson(header);
 
 		socket.emit("packet received", "server", username, json, packet.toString());
-		ConsoleIO.println("Packet sent to SPS");
+		//ConsoleIO.println("Packet sent to SPS");
 	}
 	
 	public void setID(int serverID) {

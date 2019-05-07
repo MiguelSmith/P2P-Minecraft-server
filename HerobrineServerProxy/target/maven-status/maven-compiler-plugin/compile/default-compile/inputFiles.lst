@@ -1,7 +1,7 @@
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\ProxySession.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\HerobrineProxyProtocol.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\PacketHeader.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\HerobrineProxy.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\ConsoleIO.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\ServerPacketForwarder.java
-C:\Users\judge\OneDrive\Documents\University work\Masters\Spatial Publish-Subscribe\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\test\Test.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\SpsPacketForwarder.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\HerobrineProxy.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\PacketHeader.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\HerobrineProxyProtocol.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\ConsoleIO.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\test\Test.java
+C:\Users\Miguel Smith\Documents\GitHub\P2P-Minecraft-server\HerobrineServerProxy\src\main\java\org\koekepan\herobrineproxy\session\ProxySession.java

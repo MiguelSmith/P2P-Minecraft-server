@@ -48,11 +48,11 @@ public class PacketHeader {
 		//this.sender_id = (int) jsonObj.get("Sender ID");
 	}
 	
-	public int getPacket_ID() {
+	public int getPacketID() {
 		return this.packet_ID;
 	}
 	
-	public int getSender_ID() {
+	public int getSenderID() {
 		return this.sender_ID;
 	}
 	
@@ -68,11 +68,11 @@ public class PacketHeader {
 		return this.position;
 	}
 	
-	public void setPacket_ID(int packet_id) {
+	public void setPacketID(int packet_id) {
 		this.packet_ID = packet_id;
 	}
 	
-	public void setSender_ID(int sender_id) {
+	public void setSenderID(int sender_id) {
 		this.sender_ID = sender_id;
 	}
 	
